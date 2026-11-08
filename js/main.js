@@ -143,7 +143,7 @@ let saverActive = false;
 
 function loadSavers() {
     saverImgs = [];
-    for (let i = 1; i <= 12; i++) {
+    for (let i = 1; i <= 15; i++) {
         const src = "img/savers/saver-" + i + ".png";
         saverImgs.push(src); // missing files just skip: onerror advances
     }

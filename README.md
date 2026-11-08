@@ -78,6 +78,14 @@ tools/setup-tizen.sh  one-time Tizen Studio CLI install
 tv.env.example    TV IP + tool paths (copy to tv.env)
 ```
 
+## Screensaver images
+
+`img/savers/saver-1.png` … `saver-15.png` — the loader walks the numbers in
+sequence and skips missing files. Includes real Omarchy wallpapers
+(tokyo-night, starship, last-horizon, miasma, vantablack, matte-black,
+retro-82, rose-pine, nord, ethereal) plus generated gradients. Swap in your
+own photos any time — just keep the `saver-N.png` naming.
+
 ## Debugging
 
 - `sdb connect <TV_IP>` then `sdb shell dumpsys`-style tricks vary by firmware;
