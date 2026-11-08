@@ -21,7 +21,9 @@ SDB="$TIZEN_STUDIO/tools/sdb"
 # ---------- connect ----------
 "$SDB" connect "$TV_IP"
 $SDB devices | grep -q "$TV_IP" || { echo "TV not reachable at $TV_IP (is Developer Mode on? rebooted?)"; exit 1; }
-DEVICE_NAME=$($SDB devices | sed -n "s|^$TV_IP[[:space:]]*||p" | awk '{print $1}')
+# sdb devices row: <IP>:26101   device   <MODEL>
+DEVICE_NAME=$($SDB devices | awk -v ip="$TV_IP" '$1 ~ "^"ip":" {print $3}')
+[ -n "$DEVICE_NAME" ] || { echo "could not determine TV device name from sdb devices"; exit 1; }
 echo "Device: $DEVICE_NAME"
 
 # ---------- build & sign ----------
