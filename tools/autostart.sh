@@ -17,7 +17,7 @@ set -a; source tv.env; set +a
 : "${SMARTTHINGS_TOKEN:?add SMARTTHINGS_TOKEN=... to tv.env}"
 APP_ID="${LAUNCHER_APP_ID:-cmlauncher.launcher}"
 RULE_NAME="Open launcher on TV power-on"
-DELAY_SECONDS="${AUTOSTART_DELAY:-6}"   # let the TV finish booting first
+DELAY_SECONDS="${AUTOSTART_DELAY:-0}"   # seconds after power-on; 0 works on QN75Q60D
 API="https://api.smartthings.com/v1"
 
 st() {  # st METHOD PATH [BODY]

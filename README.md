@@ -76,7 +76,7 @@ on:
 ```bash
 # token from https://account.smartthings.com/tokens (Devices + Rules scopes)
 echo 'SMARTTHINGS_TOKEN=...' >> tv.env
-tools/autostart.sh on       # TV turns on -> wait 6 s -> open the launcher
+tools/autostart.sh on       # TV turns on -> open the launcher (AUTOSTART_DELAY=n to wait)
 tools/autostart.sh status | off | test
 ```
 
