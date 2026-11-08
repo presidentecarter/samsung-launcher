@@ -101,20 +101,4 @@ const THEMES = {
     }
 };
 
-const SHARED_SAVERS = [
-    "img/savers/saver-1.png",
-    "img/savers/saver-2.png",
-    "img/savers/saver-3.png",
-    "img/savers/saver-4.png",
-    "img/savers/saver-5.png",
-    "img/savers/saver-6.png",
-    "img/savers/saver-7.png",
-    "img/savers/saver-8.png",
-    "img/savers/saver-9.png",
-    "img/savers/saver-10.png",
-    "img/savers/saver-11.png",
-    "img/savers/saver-12.png",
-    "img/savers/saver-13.png",
-    "img/savers/saver-14.png",
-    "img/savers/saver-15.png"
-];
+const SHARED_SAVERS = [];

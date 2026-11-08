@@ -110,7 +110,6 @@ js/config.js      YOUR tiles — appIds, shortcuts, logos/text
 js/main.js        key handling, navigation, launching, themes, settings, overlay
 js/themes.js      GENERATED theme palettes + wallpaper lists
 img/themes/       GENERATED per-theme wallpapers + blurred home backdrop
-img/savers/       shared screensaver set (screensaver.includeShared)
 tools/deploy.sh   build/sign/install/run loop
 tools/setup-tizen.sh  one-time Tizen Studio CLI install
 tools/sync-themes.py  import Omarchy themes
@@ -119,11 +118,10 @@ tv.env.example    TV IP + tool paths (copy to tv.env)
 
 ## Screensaver images
 
-`img/savers/saver-1.png` … `saver-15.png` — the loader walks the numbers in
-sequence and skips missing files. Includes real Omarchy wallpapers
-(tokyo-night, starship, last-horizon, miasma, vantablack, matte-black,
-retro-82, rose-pine, nord, ethereal) plus generated gradients. Swap in your
-own photos any time — just keep the `saver-N.png` naming.
+The screensaver shows the active theme's wallpapers (`img/themes/<name>/`).
+To add your own photos, drop them in `img/savers/`, set
+`screensaver.includeShared: true` in js/config.js and re-run
+`tools/sync-themes.py`.
 
 ## Debugging
 
