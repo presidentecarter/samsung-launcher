@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+    <title>Launcher</title>
+    <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+    <div id="launcher">
+        <div id="topbar">
+            <div id="clock"></div>
+        </div>
+        <div id="tiles" role="grid" aria-label="Apps"></div>
+        <div id="toast" class="hidden"></div>
+    </div>
+
+    <!-- Hidden overlay: shows every installed app + its appId. Press 9 on the remote. -->
+    <div id="appid-list" class="hidden">
+        <h2>Installed apps &amp; appIds</h2>
+        <input id="appid-filter" type="text" placeholder="filter..."/>
+        <div id="appid-rows"></div>
+    </div>
+
+    <div id="overlay" class="hidden">
+        <img id="saver-img" />
+        <div id="saver-clock"></div>
+    </div>
+    <div id="launching" class="hidden">
+        <div class="pulse-dot"></div>
+        <div class="pulse-dot d2"></div>
+        <div class="pulse-dot d3"></div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets"
+        xmlns:tizen="http://tizen.org/ns/widgets"
+        id="http://cmoney/samsung-launcher"
+        version="1.0.0">
+    <name>Launcher</name>
+    <icon src="icon.png"/>
+
+    <tizen:content src="index.html"/>
+    <tizen:application id="cmoneylauncher.launcher" package="cmoneylauncher" required_version="6.0"/>
+    <tizen:feature name="http://tizen.org/feature/screen.size.normal"/>
+
+    <!-- Launch other installed apps (Disney+, Max, Dropout, ...) -->
+    <tizen:privilege name="http://tizen.org/privilege/application.launch"/>
+    <!-- Open the TV's own settings page -->
+    <tizen:privilege name="http://tizen.org/privilege/systemsetting"/>
+    <!-- List installed apps (debug overlay to discover appIds) -->
+    <tizen:privilege name="http://tizen.org/privilege/application.info"/>
+
+    <tizen:setting screen-orientation="landscape"
+                   background-support="disable"
+                   encryption="disable"
+                   install-location="auto"
+                   hwkey-event="enable"/>
+</widget>

@@ -1,0 +1,7 @@
+.buildresult/
+*.wgt
+tv.env
+node_modules/
+profiles/
+.certs/
+.DS_Store
