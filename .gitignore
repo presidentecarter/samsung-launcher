@@ -1,4 +1,5 @@
 .buildresult/
+.buildResult/
 *.wgt
 tv.env
 node_modules/

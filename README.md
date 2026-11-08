@@ -10,11 +10,14 @@ YouTube TV, Max, Apple TV, …).
 - Big-tile app launcher as the TV's default "home" via `Settings → General →
   Smart Features → Autorun Last App` (leave the launcher running when you turn
   the TV off)
-- **Number-key shortcuts** — remote `1`–`6` jump straight to apps
-- **`0`** opens the TV settings page (falls back to a hint if Tizen refuses)
-- Arrow/OK navigation, live clock
-- **`9` = appId discovery overlay** — lists every installed app with its exact
-  `appId` so `js/config.js` can be filled in accurately
+- App tiles with each app's **real icon, pulled from the TV**
+- Top bar (press **Up** from the tiles): **App Store**, **Theme**, **Settings**
+- Arrow/OK navigation only — no number pad needed; live clock
+- **Omarchy themes** — palette + wallpapers imported from your Omarchy
+  install (Jade Horse by default). The theme's wallpaper sits blurred behind
+  the tiles and its wallpapers drive the screensaver. The **Theme** button
+  cycles themes (remembered across power cycles)
+- **`tools/list-apps.sh`** lists every installed app with its exact `appId`
 - Real remote Back/Exit keys supported via `hwkey-event`
 
 ## Known limits (so we're honest)
@@ -55,15 +58,29 @@ YouTube TV, Max, Apple TV, …).
    Re-run `tools/deploy.sh` after every edit.
 
 6. **Fill in appIds**
-   - Deploy once, open the launcher, press **9** on the remote
-   - Copy each app's exact `appId` into `js/config.js`, redeploy
-   - `CONFIG.known` has a couple of commonly cited IDs from public projects —
-     **verify with the overlay before trusting**
+   - `tools/list-apps.sh` prints every installed app and its `appId`
+   - Copy them into `js/config.js`, redeploy
 
 7. **Make it the default home screen**
    - Win the settings race: keep the launcher open when powering off
    - Enable `Settings → General → Smart Features → Autorun Last App`
    - Disables (if present): Smart Hub autorun — pointed at anything else
+
+## Themes
+
+Themes come from Omarchy (`~/.local/share/omarchy/themes`, plus your own in
+`~/.config/omarchy/themes`). Import them, then redeploy:
+
+```bash
+tools/sync-themes.py                      # default: jade-horse tokyo-night starship vantablack
+tools/sync-themes.py jade-horse nord kanagawa
+tools/sync-themes.py --all                # every installed theme
+```
+
+This converts each theme's backgrounds to 1920px JPGs in `img/themes/<name>/`,
+renders a pre-blurred `home.jpg` backdrop (CSS blur is too slow on Tizen), and
+regenerates `js/themes.js`. Set the starting theme with `theme:` in
+`js/config.js`. Needs ImageMagick.
 
 ## Project layout
 
@@ -72,9 +89,13 @@ config.xml        app identity + privileges (app launch, settings, app list)
 index.html        shell: tiles grid, clock, toast, appId overlay
 css/style.css     big-TV styling
 js/config.js      YOUR tiles — appIds, shortcuts, logos/text
-js/main.js        key handling, navigation, launching, settings, overlay
+js/main.js        key handling, navigation, launching, themes, settings, overlay
+js/themes.js      GENERATED theme palettes + wallpaper lists
+img/themes/       GENERATED per-theme wallpapers + blurred home backdrop
+img/savers/       shared screensaver set (screensaver.includeShared)
 tools/deploy.sh   build/sign/install/run loop
 tools/setup-tizen.sh  one-time Tizen Studio CLI install
+tools/sync-themes.py  import Omarchy themes
 tv.env.example    TV IP + tool paths (copy to tv.env)
 ```
 

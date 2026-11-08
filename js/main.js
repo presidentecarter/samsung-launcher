@@ -1,15 +1,17 @@
 /**
- * samsung-launcher — key handling, tile navigation, app launching.
+ * samsung-launcher — themes, tiles, top-bar actions, navigation, screensaver.
  *
- * Keyboard on a dev TV: sdb shell key events land here too, so debugging
- * over sdb works with real key codes.
+ * Arrow keys + OK only (no number pad needed). Up from the top tile row
+ * reaches the top bar: App Store, Theme, Settings.
  */
 
 /* ---------- clock ---------- */
+function timeString() {
+    return new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
 function tick() {
     const el = document.getElementById("clock");
-    if (!el) return;
-    el.textContent = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    if (el) el.textContent = timeString();
 }
 setInterval(tick, 10000);
 tick();
@@ -25,9 +27,105 @@ function toast(msg) {
     toastTimer = setTimeout(() => el.classList.add("hidden"), 2600);
 }
 
+/* ---------- themes (Omarchy palettes, js/themes.js) ---------- */
+const THEME_KEY = "launcher.theme";
+const themeIds = typeof THEMES === "object" ? Object.keys(THEMES) : [];
+let themeId = null;
+
+const CSS_VARS = {
+    bg: "--bg", tile: "--tile", tileFocus: "--tile-focus", text: "--text",
+    textBright: "--text-bright", muted: "--muted", accent: "--accent",
+    accentGlow: "--accent-glow", border: "--border", scrim: "--scrim",
+};
+
+function savedTheme() {
+    try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
+}
+
+function applyTheme(id, announce) {
+    const t = THEMES[id];
+    if (!t) return false;
+    themeId = id;
+    const root = document.documentElement.style;
+    Object.keys(CSS_VARS).forEach((k) => {
+        if (t.palette[k]) root.setProperty(CSS_VARS[k], t.palette[k]);
+    });
+    const bd = document.getElementById("backdrop");
+    const setBg = () => {
+        bd.style.backgroundImage = t.home ? "url('" + t.home + "')" : "none";
+        bd.classList.remove("fading");
+    };
+    if (announce && t.home) {
+        // preload so the cross-fade doesn't flash an empty backdrop
+        bd.classList.add("fading");
+        const img = new Image();
+        img.onload = img.onerror = () => setTimeout(setBg, 300);
+        img.src = t.home;
+    } else {
+        setBg();
+    }
+    try { localStorage.setItem(THEME_KEY, id); } catch (e) { /* not persisted */ }
+    loadSavers();
+    if (announce) toast("Theme: " + t.name);
+    return true;
+}
+
+function cycleTheme() {
+    if (themeIds.length < 2) { toast("Only one theme — add more with tools/sync-themes.py"); return; }
+    const i = themeIds.indexOf(themeId);
+    applyTheme(themeIds[(i + 1) % themeIds.length], true);
+}
+
+function initTheme() {
+    if (themeIds.length === 0) return;
+    applyTheme(savedTheme(), false) || applyTheme(CONFIG.theme, false) || applyTheme(themeIds[0], false);
+}
+
+/* ---------- launching ---------- */
+const launchingEl = document.getElementById("launching");
+
+function animateLaunch(fn) {
+    launchingEl.classList.remove("hidden");
+    setTimeout(() => {
+        fn();
+        setTimeout(() => launchingEl.classList.add("hidden"), CONFIG.launchAnimationMs);
+    }, CONFIG.launchAnimationMs);
+}
+
+/** launch the first appId in ids that the TV accepts */
+function launchFirst(ids, failMsg) {
+    const tryAt = (i) => {
+        if (i >= ids.length) { toast(failMsg); return; }
+        try {
+            tizen.application.launch(ids[i], () => {}, (err) => {
+                console.error("launch failed", ids[i], err);
+                tryAt(i + 1);
+            });
+        } catch (e) {
+            console.error("launch threw", ids[i], e);
+            tryAt(i + 1);
+        }
+    };
+    animateLaunch(() => tryAt(0));
+}
+
+function launchApp(appId, name) {
+    launchFirst([appId], "Couldn't open " + (name || appId) + " — check its appId (tools/list-apps.sh)");
+}
+
+/* ---------- app icons ---------- */
+/** the TV's own icon for an installed app, or null */
+function tvIcon(appId) {
+    try {
+        const p = tizen.application.getAppInfo(appId).iconPath;
+        return p ? "file://" + p : null;
+    } catch (e) {
+        return null;
+    }
+}
+
 /* ---------- tiles ---------- */
 const tilesEl = document.getElementById("tiles");
-let focusIdx = 0;
 
 function renderTiles() {
     tilesEl.innerHTML = "";
@@ -35,106 +133,108 @@ function renderTiles() {
         const d = document.createElement("div");
         d.className = "tile";
         d.dataset.index = String(i);
-        if (t.img) {
+
+        const icon = t.img || (t.appId && tvIcon(t.appId));
+        if (CONFIG.tileStyle === "logo" && t.logo) {
+            // white-on-transparent logo used as a mask, filled with the accent
+            const logo = document.createElement("div");
+            logo.className = "logo";
+            const url = "url('" + t.logo + "')";
+            logo.style.webkitMaskImage = url;
+            logo.style.maskImage = url;
+            d.appendChild(logo);
+        } else if (icon) {
             const img = document.createElement("img");
-            img.src = t.img;
+            img.className = "icon";
+            img.src = icon;
+            img.onerror = () => { img.remove(); d.classList.add("no-icon"); };
             d.appendChild(img);
         } else {
-            const s = document.createElement("span");
-            s.className = "logo-text";
-            s.textContent = t.text || t.name;
-            d.appendChild(s);
+            d.classList.add("no-icon");
         }
-        if (t.shortcut && t.shortcut !== "0" && t.shortcut !== "9") {
-            const k = document.createElement("span");
-            k.className = "shortcut";
-            k.textContent = t.shortcut;
-            d.appendChild(k);
-        }
+        const label = document.createElement("span");
+        label.className = "label";
+        label.textContent = t.name;
+        d.appendChild(label);
+
+        d.addEventListener("click", () => { focusTile(i); activate(); });
         tilesEl.appendChild(d);
     });
-    updateFocus();
 }
 
-function updateFocus() {
+/* ---------- top bar ---------- */
+const barEls = Array.prototype.slice.call(document.querySelectorAll("#actions .action"));
+const ACTIONS = {
+    store: () => launchFirst([CONFIG.appStoreId], "Couldn't open the app store"),
+    theme: cycleTheme,
+    settings: () => launchFirst(CONFIG.settingsIds, "Use the settings button on the remote"),
+};
+barEls.forEach((el, i) => el.addEventListener("click", () => { focusBar(i); activate(); }));
+
+/* ---------- focus & navigation ---------- */
+let zone = "tiles";      // "tiles" | "bar"
+let tileIdx = 0;
+let barIdx = 0;
+
+function render() {
     const kids = tilesEl.children;
-    for (let i = 0; i < kids.length; i++) kids[i].classList.toggle("focused", i === focusIdx);
+    for (let i = 0; i < kids.length; i++) kids[i].classList.toggle("focused", zone === "tiles" && i === tileIdx);
+    barEls.forEach((el, i) => el.classList.toggle("focused", zone === "bar" && i === barIdx));
+}
+function focusTile(i) { zone = "tiles"; tileIdx = i; render(); }
+function focusBar(i) { zone = "bar"; barIdx = i; render(); }
+
+/** tiles per row, measured from the laid-out grid */
+function columns() {
+    const kids = tilesEl.children;
+    if (!kids.length) return 1;
+    const top = kids[0].offsetTop;
+    let n = 0;
+    while (n < kids.length && kids[n].offsetTop === top) n++;
+    return n;
 }
 
-tilesEl.addEventListener("click", (e) => {
-    const t = e.target.closest(".tile");
-    if (!t) return;
-    focusIdx = parseInt(t.dataset.index, 10);
-    updateFocus();
-    activateTile();
-});
-
-/* ---------- launching ---------- */
-function launchApp(appId) {
-    toast("Opening…");
-    try {
-        animateLaunch(() => {
-            tizen.application.launch(appId, () => {
-                if (CONFIG.debugToasts) console.log("launched", appId);
-            }, (err) => {
-                console.error("launch failed", appId, err);
-                toast("Couldn't launch that app — check its appId (press 9)");
-            });
-        });
-    } catch (e) {
-        console.error("launch threw", e);
-        toast("tizen.application.launch unavailable");
+function move(dir) {
+    if (zone === "bar") {
+        if (dir === "left")  barIdx = Math.max(0, barIdx - 1);
+        if (dir === "right") barIdx = Math.min(barEls.length - 1, barIdx + 1);
+        if (dir === "down" && tilesEl.children.length) zone = "tiles";
+        render();
+        return;
     }
-}
-
-function openUrl(url) {
-    // fallback path: fullscreen web view of the service
-    toast("Opening " + url);
-    window.open(url, "_self");
-}
-
-function openSettings() {
-    try {
-        tizen.systemsetting.show(() => {}, (err) => {
-            console.error("settings failed", err);
-            toast("Open settings with the ⭐ / settings key on the remote");
-        });
-    } catch (e) {
-        toast("Open settings with the ⭐ / settings key on the remote");
+    const count = tilesEl.children.length;
+    if (!count) return;
+    const cols = columns();
+    switch (dir) {
+        case "left":  tileIdx = (tileIdx - 1 + count) % count; break;
+        case "right": tileIdx = (tileIdx + 1) % count; break;
+        case "up":
+            if (tileIdx < cols) { zone = "bar"; } else { tileIdx -= cols; }
+            break;
+        case "down":
+            if (tileIdx + cols < count) tileIdx += cols;
+            else if (Math.floor(tileIdx / cols) < Math.floor((count - 1) / cols)) tileIdx = count - 1;
+            break;
     }
+    render();
 }
 
-function activateTile() {
-    const t = CONFIG.tiles[focusIdx];
+function activate() {
+    if (zone === "bar") {
+        const fn = ACTIONS[barEls[barIdx].dataset.action];
+        if (fn) fn();
+        return;
+    }
+    const t = CONFIG.tiles[tileIdx];
     if (!t) return;
-    if (t.appId) { launchApp(t.appId); return; }
-    if (t.url)  { openUrl(t.url); return; }
-    toast("No appId set for " + t.name + " — press 9 to find it");
-}
-
-/* ---------- appId debug overlay (key 9) ---------- */
-const listEl = document.getElementById("appid-list");
-const rowsEl = document.getElementById("appid-rows");
-const overlayEl = document.getElementById("overlay");
-const saversEl = document.getElementById("saver-img");
-const saverClockEl = document.getElementById("saver-clock");
-const launchingEl = document.getElementById("launching");
-
-/* ---------- launching animation ---------- */
-let launching = false;
-function animateLaunch(fn) {
-    launching = true;
-    launchingEl.classList.remove("hidden");
-    setTimeout(() => {
-        fn();
-        setTimeout(() => {
-            launchingEl.classList.add("hidden");
-            launching = false;
-        }, CONFIG.launchAnimationMs);
-    }, CONFIG.launchAnimationMs);
+    if (t.appId) launchApp(t.appId, t.name);
+    else toast("No appId set for " + t.name);
 }
 
 /* ---------- screensaver ---------- */
+const overlayEl = document.getElementById("overlay");
+const saverImgEl = document.getElementById("saver-img");
+const saverClockEl = document.getElementById("saver-clock");
 let saverImgs = [];
 let saverIdx = 0;
 let saverTimer = null;
@@ -142,28 +242,26 @@ let clockTimer = null;
 let saverActive = false;
 
 function loadSavers() {
-    saverImgs = [];
-    for (let i = 1; i <= 15; i++) {
-        const src = "img/savers/saver-" + i + ".png";
-        saverImgs.push(src); // missing files just skip: onerror advances
+    const t = themeId && THEMES[themeId];
+    saverImgs = t ? t.wallpapers.slice() : [];
+    const shared = typeof SHARED_SAVERS !== "undefined" ? SHARED_SAVERS : [];
+    if (CONFIG.screensaver.includeShared || saverImgs.length === 0) {
+        saverImgs = saverImgs.concat(shared);
     }
+    saverIdx = 0;
 }
 
 function showNextSaver() {
-    if (saverImgs.length === 0) return stopScreensaver();
-    for (let tries = 0; tries < saverImgs.length; tries++) {
-        const src = saverImgs[saverIdx % saverImgs.length];
-        saverIdx++;
-        saversEl.style.display = "block";
-        saversEl.onerror = () => { saversEl.style.display = "none"; };
-        saversEl.src = src;
-        return;
-    }
+    if (saverImgs.length === 0) { stopScreensaver(); return; }
+    saverImgEl.style.display = "block";
+    saverImgEl.onerror = () => { saverImgEl.style.display = "none"; };
+    saverImgEl.src = saverImgs[saverIdx % saverImgs.length];
+    saverIdx++;
 }
 
 function clockTick() {
     saverClockEl.style.display = CONFIG.screensaver.showClock ? "block" : "none";
-    saverClockEl.textContent = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    saverClockEl.textContent = timeString();
 }
 
 function startScreensaver() {
@@ -186,43 +284,21 @@ function stopScreensaver() {
     setTimeout(() => overlayEl.classList.add("hidden"), 300);
 }
 
-/* idle detection */
 let idleTimeout = null;
 function resetIdle() {
     clearTimeout(idleTimeout);
-    idleTimeout = setTimeout(startScreensaver, CONFIG.screensaver.idleMinutes * 60000);
-}
-
-
-function showAppList() {
-    rowsEl.textContent = "";
-    let apps = [];
-    try {
-        const ctxs = tizen.application.getAppsContext();
-        apps = ctxs.map(tizen.application.getAppInfo.bind(tizen.application));
-    } catch (e) {
-        rowsEl.textContent = "getAppsInfo unavailable: " + e.message;
+    if (CONFIG.screensaver.idleMinutes > 0) {
+        idleTimeout = setTimeout(startScreensaver, CONFIG.screensaver.idleMinutes * 60000);
     }
-    const draw = (filter) => {
-        rowsEl.innerHTML = "";
-        apps.filter(a => !filter || a.name.toLowerCase().includes(filter) || a.id.toLowerCase().includes(filter))
-            .forEach(a => {
-                const p = document.createElement("div");
-                p.innerHTML = "<b>" + a.name + "</b> — " + a.id;
-                rowsEl.appendChild(p);
-            });
-    };
-    const filterEl = document.getElementById("appid-filter");
-    filterEl.value = "";
-    draw("");
-    filterEl.oninput = () => draw(filterEl.value.toLowerCase());
-    listEl.classList.remove("hidden");
-    filterEl.focus();
 }
-
-function hideAppList() { listEl.classList.add("hidden"); }
 
 /* ---------- key handling ---------- */
+const KEYS = {
+    37: "left", 38: "up", 39: "right", 40: "down", 13: "ok",
+    ArrowLeft: "left", ArrowUp: "up", ArrowRight: "right", ArrowDown: "down",
+    Left: "left", Up: "up", Right: "right", Down: "down", Enter: "ok", XF86OK: "ok",
+};
+
 window.addEventListener("keydown", (e) => {
     resetIdle();
 
@@ -233,48 +309,18 @@ window.addEventListener("keydown", (e) => {
         return;
     }
 
-    // tv remote keys arrive with sensible keyCodes; also handle name-based events
-    const k = e.keyName || e.key;
-    const isNum = /^[0-9]$/.test(k);
-
-    if (!listEl.classList.contains("hidden")) {
-        if (k === "Backspace" || k === "Escape" || k === "XF86Exit" || e.keyCode === 10009) {
-            e.preventDefault();
-            hideAppList();
-        }
-        return; // filter input is active; let typing flow
-    }
-
-    if (isNum) {
-        e.preventDefault();
-        if (k === "0") { openSettings(); return; }
-        if (k === "9") { showAppList(); return; }
-        const idx = CONFIG.tiles.findIndex(t => t.shortcut === k);
-        if (idx === -1) { toast("No app mapped to " + k); return; }
-        focusIdx = idx;
-        updateFocus();
-        activateTile();
-        return;
-    }
-
-    // navigation: arrows / samsung tv key codes
-    const count = tilesEl.children.length;
-    switch (e.keyCode || k) {
-        case 37: case "ArrowLeft": case "Left":
-            if (count > 0) { focusIdx = (focusIdx - 1 + count) % count; updateFocus(); } break;
-        case 39: case "ArrowRight": case "Right":
-            if (count > 0) { focusIdx = (focusIdx + 1) % count; updateFocus(); } break;
-        case 40: case "ArrowDown": case "Down":
-        case 38: case "ArrowUp": case "Up":
-            if (count > 0) { focusIdx = (focusIdx + 3) % count; updateFocus(); } break;
-        case 13: case "Enter": case "XF86OK":
-            activateTile(); break;
-    }
+    const action = KEYS[e.keyCode] || KEYS[e.key];
+    if (!action) return;
+    e.preventDefault();
+    if (action === "ok") activate();
+    else move(action);
 });
 
 /* ---------- boot ---------- */
 document.addEventListener("DOMContentLoaded", () => {
+    initTheme();
+    if (!themeId) loadSavers();
     renderTiles();
-    loadSavers();
+    render();
     resetIdle();
 });

@@ -1,85 +1,50 @@
 /**
- * Launcher configuration — edit tiles here, redeploy with ./deploy.sh
+ * Launcher configuration — edit tiles here, redeploy with tools/deploy.sh
  *
- * appId discovery: install the app, open this launcher, press 9 on the
- * remote. Every installed app and its exact appId is listed. Paste it in.
+ * appIds: run tools/list-apps.sh to list every app installed on the TV with
+ * its appId.
  *
- * shortcut: number key on the remote. 0 = reserved for Settings. "9" is
- * reserved for the appId debug overlay.
+ * Artwork per tile:
+ *   logo  monochrome logo (white on transparent PNG/SVG in img/logos/),
+ *         painted in the theme's accent colour when tileStyle is "logo"
+ *   img   full-colour icon override
+ *   (neither) the TV's own icon for that app, pulled automatically
  */
 
 const CONFIG = {
-    /** true = weird things with the TV? a debug toast explains key handling */
-    debugToasts: false,
+    /** Omarchy theme to start with — any key of THEMES in js/themes.js.
+     *  Import more with tools/sync-themes.py. The Theme button cycles them;
+     *  the choice is remembered across power cycles. */
+    theme: "jade-horse",
+
+    /** "logo" = theme-coloured logos, "icon" = the apps' full-colour icons */
+    tileStyle: "logo",
 
     tiles: [
-        {
-            name: "Dropout",
-            appId: "",            // ← fill in after pressing 9 (debug overlay)
-            url: "",              // fallback: "" to use native app, or e.g. "https://www.dropout.tv/browse"
-            shortcut: "1",
-            text: "DROPOUT",      // shown until you add img/s/dropout.png
-            // img: "img/dropout.png",
-        },
-        {
-            name: "Disney+",
-            appId: "",
-            url: "",
-            shortcut: "2",
-            text: "Disney+",
-        },
-        {
-            name: "YouTube",
-            appId: "",            // native app — your Premium login stays as-is
-            url: "",
-            shortcut: "3",
-            text: "YouTube",
-        },
-        {
-            name: "YouTube TV",
-            appId: "",
-            url: "",
-            shortcut: "4",
-            text: "YouTube TV",
-        },
-        {
-            name: "Max",
-            appId: "",            // launches the NATIVE Max app: your HBO login & Up Next stay untouched
-            url: "",
-            shortcut: "5",
-            text: "Max",
-        },
-        {
-            name: "Apple TV",
-            appId: "",
-            url: "",
-            shortcut: "6",
-            text: "Apple TV+",
-        },
-        {
-            name: "Spotify",
-            appId: "",            // native app — Spotify Connect to Sonos works unchanged
-            url: "",
-            shortcut: "7",
-            text: "Spotify",
-        },
+        { name: "Dropout",    appId: "MjdLQbVh6K.Dropout",        logo: "img/logos/dropout.png" },
+        { name: "Disney+",    appId: "MCmYXNxgcu.DisneyPlus",     logo: "img/logos/disneyplus.png" },
+        { name: "YouTube",    appId: "9Ur5IzDKqV.TizenYouTube",   logo: "img/logos/youtube.svg",    img: "img/icons/youtube.svg" },
+        { name: "YouTube TV", appId: "PvWgqxV3Xa.YouTubeTV",      logo: "img/logos/youtube-tv.svg", img: "img/icons/youtube-tv.svg" },
+        { name: "HBO Max",    appId: "5b8c3eb16b.BeamCTVDev",     logo: "img/logos/hbomax.png" },
+        { name: "Apple TV",   appId: "com.samsung.tv.aria-video", logo: "img/logos/appletv.png" },
+        { name: "Spotify",    appId: "rJeHak5zRg.Spotify",        logo: "img/logos/spotify.png" },
     ],
 
+    /** top-bar buttons (reach with Up from the tiles) */
+    appStoreId: "com.samsung.tv.store",
+    /** first one that launches wins */
+    settingsIds: ["org.tizen.menu", "com.samsung.tv.coba.setting"],
+
     /** screensaver: after idleMinutes with no remote input, fade to a
-     *  fullscreen slideshow of img/savers/*.png (sorted). 0 disables. */
+     *  fullscreen slideshow of the active theme's wallpapers. 0 disables.
+     *  includeShared also mixes in img/savers/* (all-theme collection). */
     screensaver: {
         idleMinutes: 5,
         secondsPerImage: 30,
         showClock: true,
+        includeShared: false,
     },
 
     /** ms for the "Launching…" overlay animation before launch fires */
     launchAnimationMs: 350,
-
-    /** hard-coded, common Samsung/Tizen appIds from public launcher projects —
-     *  verify each with the debug overlay before trusting. Empty = skip. */
-    known: {
-        youtube: "9HVLDgIots.youtube",
-        netflix: "9nwRhOE3Y.TizenNetflix",
-    },
 };

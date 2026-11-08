@@ -27,12 +27,15 @@ DEVICE_NAME=$($SDB devices | awk -v ip="$TV_IP" '$1 ~ "^"ip":" {print $3}')
 echo "Device: $DEVICE_NAME"
 
 # ---------- build & sign ----------
-rm -rf .buildresult
-"$TIZEN" build-web -s "$CERT_PROFILE" -e ".*" -e "tools/*" -e "tv.env*" -e "*.md" -e "node_modules/*"
+OUT=.buildResult
+rm -rf "$OUT" .buildresult
+"$TIZEN" build-web -out "$OUT" -e ".*" -e "tools/*" -e "tv.env*" -e "*.md" -e "node_modules/*" -- "$PWD"
+"$TIZEN" package -t wgt -s "$CERT_PROFILE" -- "$PWD/$OUT"
 
-WGT=$(find .buildresult -name "*.wgt" | head -1)
+WGT=$(find "$OUT" -maxdepth 1 -name "*.wgt" | head -1)
 [ -n "$WGT" ] || { echo "no .wgt produced"; exit 1; }
+echo "Package: $WGT ($(du -h "$WGT" | cut -f1))"
 
 # ---------- install & run ----------
-"$TIZEN" install -n "$WGT" -t "$DEVICE_NAME"
-"$TIZEN" run -p "cmoneylauncher.launcher" -t "$DEVICE_NAME"
+"$TIZEN" install -n "$(basename "$WGT")" -t "$DEVICE_NAME" -- "$PWD/$OUT"
+"$TIZEN" run -p "cmlauncher.launcher" -t "$DEVICE_NAME"

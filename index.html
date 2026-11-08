@@ -7,19 +7,27 @@
     <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
+    <div id="backdrop"></div>
     <div id="launcher">
         <div id="topbar">
+            <div id="actions">
+                <div class="action" data-action="store">
+                    <svg viewBox="0 0 24 24"><circle cx="7" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><circle cx="7" cy="17" r="3"/><circle cx="17" cy="17" r="3"/></svg>
+                    <span>App Store</span>
+                </div>
+                <div class="action" data-action="theme">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" class="fill"/></svg>
+                    <span>Theme</span>
+                </div>
+                <div class="action" data-action="settings">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>
+                    <span>Settings</span>
+                </div>
+            </div>
             <div id="clock"></div>
         </div>
         <div id="tiles" role="grid" aria-label="Apps"></div>
         <div id="toast" class="hidden"></div>
-    </div>
-
-    <!-- Hidden overlay: shows every installed app + its appId. Press 9 on the remote. -->
-    <div id="appid-list" class="hidden">
-        <h2>Installed apps &amp; appIds</h2>
-        <input id="appid-filter" type="text" placeholder="filter..."/>
-        <div id="appid-rows"></div>
     </div>
 
     <div id="overlay" class="hidden">
@@ -32,6 +40,7 @@
         <div class="pulse-dot d3"></div>
     </div>
 
+    <script src="js/themes.js"></script>
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
 </body>
