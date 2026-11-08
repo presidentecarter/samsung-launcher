@@ -165,7 +165,7 @@ function renderTiles() {
 /* ---------- top bar ---------- */
 const barEls = Array.prototype.slice.call(document.querySelectorAll("#actions .action"));
 const ACTIONS = {
-    store: () => launchFirst([CONFIG.appStoreId], "Couldn't open the app store"),
+    store: () => launchFirst(CONFIG.appStoreIds, "Couldn't open the app store"),
     theme: cycleTheme,
     settings: () => launchFirst(CONFIG.settingsIds, "Use the settings button on the remote"),
 };

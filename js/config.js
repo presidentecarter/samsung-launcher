@@ -31,8 +31,9 @@ const CONFIG = {
     ],
 
     /** top-bar buttons (reach with Up from the tiles) */
-    appStoreId: "com.samsung.tv.store",
-    /** first one that launches wins */
+    /** first one that launches wins (com.samsung.tv.store "launches" but
+     *  shows nothing on this TV; org.volt.apps is the visible Apps panel) */
+    appStoreIds: ["org.volt.apps", "com.samsung.tv.store"],
     settingsIds: ["org.tizen.menu", "com.samsung.tv.coba.setting"],
 
     /** screensaver: after idleMinutes with no remote input, fade to a

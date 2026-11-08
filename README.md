@@ -66,6 +66,24 @@ YouTube TV, Max, Apple TV, …).
    - Enable `Settings → General → Smart Features → Autorun Last App`
    - Disables (if present): Smart Hub autorun — pointed at anything else
 
+## Open on power-on (SmartThings)
+
+The TV can't be told to start a sideloaded app at boot, and the SmartThings
+app's routine editor can't pick one either — but a SmartThings **rule**
+created through the API can. It runs in Samsung's cloud, so no PC needs to be
+on:
+
+```bash
+# token from https://account.smartthings.com/tokens (Devices + Rules scopes)
+echo 'SMARTTHINGS_TOKEN=...' >> tv.env
+tools/autostart.sh on       # TV turns on -> wait 6 s -> open the launcher
+tools/autostart.sh status | off | test
+```
+
+Tokens expire after 24 h; that only matters for changing the rule — the rule
+itself keeps running. The TV must be reachable by SmartThings when it powers
+on (Settings → General → Network → Expert Settings → Power On with Mobile).
+
 ## Themes
 
 Themes come from Omarchy (`~/.local/share/omarchy/themes`, plus your own in
