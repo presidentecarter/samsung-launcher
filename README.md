@@ -11,7 +11,7 @@ YouTube TV, Max, Apple TV, …).
   Smart Features → Autorun Last App` (leave the launcher running when you turn
   the TV off)
 - App tiles with each app's **real icon, pulled from the TV**
-- Top bar (press **Up** from the tiles): **App Store**, **Theme**, **Settings**
+- Top bar (press **Up** from the tiles): **App Store**, **Theme**, **Screensaver**, **Settings**
 - Arrow/OK navigation only — no number pad needed; live clock
 - **Omarchy themes** — palette + wallpapers imported from your Omarchy
   install (Jade Horse by default). The theme's wallpaper sits blurred behind

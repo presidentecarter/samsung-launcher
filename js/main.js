@@ -167,6 +167,7 @@ const barEls = Array.prototype.slice.call(document.querySelectorAll("#actions .a
 const ACTIONS = {
     store: () => launchFirst(CONFIG.appStoreIds, "Couldn't open the app store"),
     theme: cycleTheme,
+    screensaver: () => startScreensaver(true),
     settings: () => launchFirst(CONFIG.settingsIds, "Use the settings button on the remote"),
 };
 barEls.forEach((el, i) => el.addEventListener("click", () => { focusBar(i); activate(); }));
@@ -264,8 +265,9 @@ function clockTick() {
     saverClockEl.textContent = timeString();
 }
 
-function startScreensaver() {
-    if (saverActive || CONFIG.screensaver.idleMinutes <= 0) return;
+/** manual = started from the button (works even if idle start is disabled) */
+function startScreensaver(manual) {
+    if (saverActive || (!manual && CONFIG.screensaver.idleMinutes <= 0)) return;
     saverActive = true;
     overlayEl.classList.remove("hidden");
     requestAnimationFrame(() => overlayEl.classList.add("active"));
