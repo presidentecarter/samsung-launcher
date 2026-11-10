@@ -130,3 +130,15 @@ To add your own photos, drop them in `img/savers/`, set
 - Key events: set `CONFIG.debugToasts = true`.
 - If installs silently fail: reboot TV (unplug 30 s), then re-check Developer
   Mode's Host PC IP — it must be **this computer's** IP while deploying.
+
+## Credits
+
+- Themes, palettes and wallpapers in `img/themes/` come from
+  [Omarchy](https://github.com/basecamp/omarchy) (MIT). The wallpapers belong
+  to their original artists; see the Omarchy repo for theme credits.
+- App logos in `img/logos/` and `img/icons/` are trademarks of their owners,
+  used only to label the tiles that launch their apps.
+
+## License
+
+MIT for the code in this repo. See [LICENSE](LICENSE).

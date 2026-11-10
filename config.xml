@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <widget xmlns="http://www.w3.org/ns/widgets"
         xmlns:tizen="http://tizen.org/ns/widgets"
-        id="http://cmoney/samsung-launcher"
+        id="https://github.com/presidentecarter/samsung-launcher"
         version="1.0.0">
     <name>Launcher</name>
     <icon src="icon.png"/>
